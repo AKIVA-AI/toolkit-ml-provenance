@@ -1,6 +1,6 @@
-﻿# Toolkit ML Provenance & SBOM (Enterprise Tool)
+# Toolkit ML Provenance and SBOM (Enterprise Tool)
 
-Generates a deterministic JSON manifest (an â€œML SBOMâ€) for artifacts like:
+Generates a deterministic JSON manifest (an "ML SBOM") for artifacts like:
 
 - datasets (files or directories)
 - training configs
@@ -60,4 +60,6 @@ Exit codes:
 - `2`: invalid usage
 - `3`: unexpected error
 
+## License
 
+MIT License - see LICENSE file for details.
