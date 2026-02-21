@@ -1,0 +1,12 @@
+version: '3.8'
+services:
+  provenance:
+    build: .
+    container_name: toolkit-mlsbom
+    volumes:
+      - ./sboms:/app/sboms
+      - ./reports:/app/reports
+      - ./models:/app/models
+    environment:
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    command: tail -f /dev/null
