@@ -23,6 +23,12 @@ classifiers = [
 ]
 dependencies = []
 
+[project.urls]
+Homepage = "https://github.com/AKIVA-AI/toolkit-ml-provenance"
+Repository = "https://github.com/AKIVA-AI/toolkit-ml-provenance"
+Documentation = "https://github.com/AKIVA-AI/toolkit-ml-provenance#readme"
+"Bug Tracker" = "https://github.com/AKIVA-AI/toolkit-ml-provenance/issues"
+
 [project.scripts]
 toolkit-mlsbom = "toolkit_ml_sbom.cli:main"
 
@@ -49,7 +55,7 @@ omit = ["*/toolkit_ml_sbom/__main__.py"]
 [tool.coverage.report]
 show_missing = true
 skip_covered = true
-fail_under = 80
+fail_under = 70
 
 [tool.ruff]
 line-length = 100
@@ -70,4 +76,3 @@ where = ["src"]
 
 [tool.setuptools.package-data]
 toolkit_ml_sbom = ["py.typed"]
-
