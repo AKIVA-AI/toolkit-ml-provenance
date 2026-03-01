@@ -119,7 +119,7 @@ def test_parse_meta_success() -> None:
     """Test metadata parsing with valid key=value pairs."""
     items = ["key1=value1", "key2=value2", "key3=value with spaces"]
     result = _parse_meta(items)
-    
+
     assert result == {
         "key1": "value1",
         "key2": "value2",
@@ -143,7 +143,7 @@ def test_parse_meta_multiple_equals() -> None:
     """Test metadata parsing handles multiple = signs."""
     items = ["url=https://example.com", "equation=x=y+z"]
     result = _parse_meta(items)
-    
+
     assert result == {
         "url": "https://example.com",
         "equation": "x=y+z",
@@ -157,28 +157,38 @@ def test_parse_meta_multiple_equals() -> None:
 
 def test_cli_generate_root_not_found() -> None:
     """Test generate fails when root doesn't exist."""
-    exit_code = main([
-        "generate",
-        "--root", "/nonexistent",
-        "--out", "/tmp/manifest.json",
-        "--include", "*.py",
-    ])
-    
+    exit_code = main(
+        [
+            "generate",
+            "--root",
+            "/nonexistent",
+            "--out",
+            "/tmp/manifest.json",
+            "--include",
+            "*.py",
+        ]
+    )
+
     assert exit_code == EXIT_CLI_ERROR
 
 
 def test_cli_generate_no_matches(tmp_path: Path) -> None:
     """Test generate fails when no files match pattern."""
     out_file = tmp_path / "manifest.json"
-    
+
     # Now returns exit code instead of raising
-    exit_code = main([
-        "generate",
-        "--root", str(tmp_path),
-        "--out", str(out_file),
-        "--include", "*.nonexistent",
-    ])
-    
+    exit_code = main(
+        [
+            "generate",
+            "--root",
+            str(tmp_path),
+            "--out",
+            str(out_file),
+            "--include",
+            "*.nonexistent",
+        ]
+    )
+
     assert exit_code == EXIT_CLI_ERROR
 
 
@@ -187,17 +197,23 @@ def test_cli_generate_invalid_metadata(tmp_path: Path) -> None:
     # Create a test file
     test_file = tmp_path / "test.txt"
     test_file.write_text("test", encoding="utf-8")
-    
+
     out_file = tmp_path / "manifest.json"
-    
-    exit_code = main([
-        "generate",
-        "--root", str(tmp_path),
-        "--out", str(out_file),
-        "--include", "*.txt",
-        "--meta", "invalid_format",
-    ])
-    
+
+    exit_code = main(
+        [
+            "generate",
+            "--root",
+            str(tmp_path),
+            "--out",
+            str(out_file),
+            "--include",
+            "*.txt",
+            "--meta",
+            "invalid_format",
+        ]
+    )
+
     assert exit_code == EXIT_CLI_ERROR
 
 
@@ -210,13 +226,17 @@ def test_cli_keygen_success(tmp_path: Path) -> None:
     """Test keygen creates key files."""
     priv_key = tmp_path / "private.pem"
     pub_key = tmp_path / "public.pem"
-    
-    exit_code = main([
-        "keygen",
-        "--private-key", str(priv_key),
-        "--public-key", str(pub_key),
-    ])
-    
+
+    exit_code = main(
+        [
+            "keygen",
+            "--private-key",
+            str(priv_key),
+            "--public-key",
+            str(pub_key),
+        ]
+    )
+
     assert exit_code == EXIT_SUCCESS
     assert priv_key.exists()
     assert pub_key.exists()
@@ -233,13 +253,17 @@ def test_cli_sign_manifest_not_found(tmp_path: Path) -> None:
     """Test sign fails when manifest doesn't exist."""
     priv_key = tmp_path / "private.pem"
     priv_key.write_text("dummy", encoding="utf-8")
-    
-    exit_code = main([
-        "sign",
-        "--manifest", "/nonexistent.json",
-        "--private-key", str(priv_key),
-    ])
-    
+
+    exit_code = main(
+        [
+            "sign",
+            "--manifest",
+            "/nonexistent.json",
+            "--private-key",
+            str(priv_key),
+        ]
+    )
+
     assert exit_code == EXIT_CLI_ERROR
 
 
@@ -247,13 +271,17 @@ def test_cli_sign_private_key_not_found(tmp_path: Path) -> None:
     """Test sign fails when private key doesn't exist."""
     manifest = tmp_path / "manifest.json"
     manifest.write_text('{"test": true}', encoding="utf-8")
-    
-    exit_code = main([
-        "sign",
-        "--manifest", str(manifest),
-        "--private-key", "/nonexistent.pem",
-    ])
-    
+
+    exit_code = main(
+        [
+            "sign",
+            "--manifest",
+            str(manifest),
+            "--private-key",
+            "/nonexistent.pem",
+        ]
+    )
+
     assert exit_code == EXIT_CLI_ERROR
 
 
@@ -264,11 +292,14 @@ def test_cli_sign_private_key_not_found(tmp_path: Path) -> None:
 
 def test_cli_verify_manifest_not_found() -> None:
     """Test verify fails when manifest doesn't exist."""
-    exit_code = main([
-        "verify",
-        "--manifest", "/nonexistent.json",
-    ])
-    
+    exit_code = main(
+        [
+            "verify",
+            "--manifest",
+            "/nonexistent.json",
+        ]
+    )
+
     assert exit_code == EXIT_CLI_ERROR
 
 
@@ -276,12 +307,15 @@ def test_cli_verify_invalid_manifest(tmp_path: Path) -> None:
     """Test verify fails with invalid manifest."""
     manifest = tmp_path / "manifest.json"
     manifest.write_text("not valid json", encoding="utf-8")
-    
-    exit_code = main([
-        "verify",
-        "--manifest", str(manifest),
-    ])
-    
+
+    exit_code = main(
+        [
+            "verify",
+            "--manifest",
+            str(manifest),
+        ]
+    )
+
     assert exit_code == EXIT_CLI_ERROR
 
 
@@ -295,17 +329,22 @@ def test_cli_verbose_flag(tmp_path: Path, caplog) -> None:
     # Create test file
     test_file = tmp_path / "test.txt"
     test_file.write_text("test content", encoding="utf-8")
-    
+
     out_file = tmp_path / "manifest.json"
-    
-    exit_code = main([
-        "--verbose",
-        "generate",
-        "--root", str(tmp_path),
-        "--out", str(out_file),
-        "--include", "*.txt",
-    ])
-    
+
+    exit_code = main(
+        [
+            "--verbose",
+            "generate",
+            "--root",
+            str(tmp_path),
+            "--out",
+            str(out_file),
+            "--include",
+            "*.txt",
+        ]
+    )
+
     assert exit_code == EXIT_SUCCESS
     assert out_file.exists()
 
@@ -320,9 +359,8 @@ def test_json_round_trip(tmp_path: Path) -> None:
         "list": [1, 2, 3],
         "nested": {"key": "value"},
     }
-    
+
     _write(file_path, data)
     result = _read(file_path)
-    
-    assert result == data
 
+    assert result == data

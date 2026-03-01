@@ -50,7 +50,18 @@ def test_sign_and_verify_signature(tmp_path: Path) -> None:
 
     manifest = tmp_path / "m.json"
     assert (
-        main(["generate", "--root", str(root), "--out", str(manifest), "--include", "a.txt"]) == 0
+        main(
+            [
+                "generate",
+                "--root",
+                str(root),
+                "--out",
+                str(manifest),
+                "--include",
+                "a.txt",
+            ]
+        )
+        == 0
     )
 
     priv = tmp_path / "priv.pem"
@@ -59,7 +70,17 @@ def test_sign_and_verify_signature(tmp_path: Path) -> None:
 
     sig = tmp_path / "m.sig.json"
     assert (
-        main(["sign", "--manifest", str(manifest), "--private-key", str(priv), "--out", str(sig)])
+        main(
+            [
+                "sign",
+                "--manifest",
+                str(manifest),
+                "--private-key",
+                str(priv),
+                "--out",
+                str(sig),
+            ]
+        )
         == 0
     )
 
@@ -77,4 +98,3 @@ def test_sign_and_verify_signature(tmp_path: Path) -> None:
         )
         == 0
     )
-

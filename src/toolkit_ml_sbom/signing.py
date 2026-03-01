@@ -40,7 +40,9 @@ def sign_bytes(*, payload: bytes, private_key_pem: str) -> str:
     except Exception as exc:  # noqa: BLE001
         raise RuntimeError(f"missing_optional_dep:signing:{exc}") from exc
 
-    private_key = serialization.load_pem_private_key(private_key_pem.encode("utf-8"), password=None)
+    private_key = serialization.load_pem_private_key(
+        private_key_pem.encode("utf-8"), password=None
+    )
     if not isinstance(private_key, Ed25519PrivateKey):
         raise ValueError("private_key_not_ed25519")
     sig = private_key.sign(payload)
@@ -70,6 +72,6 @@ def canonical_json_bytes(obj: Any) -> bytes:
     """
     import json
 
-    return json.dumps(obj, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode(
-        "utf-8"
-    )
+    return json.dumps(
+        obj, sort_keys=True, separators=(",", ":"), ensure_ascii=False
+    ).encode("utf-8")
