@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import subprocess
+import subprocess  # nosec B404
 import time
 from dataclasses import dataclass
 from pathlib import Path
@@ -15,7 +15,7 @@ def _utc_ts() -> float:
 
 def _try_git_commit(root: Path) -> str:
     try:
-        r = subprocess.run(
+        r = subprocess.run(  # nosec
             ["git", "-C", str(root), "rev-parse", "HEAD"],
             check=True,
             capture_output=True,

@@ -377,7 +377,10 @@ def build_parser() -> argparse.ArgumentParser:
     """Build CLI argument parser."""
     p = argparse.ArgumentParser(
         prog="toolkit-mlsbom",
-        description="Toolkit ML Provenance SBOM - Generate and verify software bill of materials for ML models",
+        description=(
+            "Toolkit ML Provenance SBOM - Generate and verify"
+            " software bill of materials for ML models"
+        ),
     )
     p.add_argument(
         "--verbose",
@@ -390,9 +393,15 @@ def build_parser() -> argparse.ArgumentParser:
     gen = sub.add_parser(
         "generate", help="Generate a provenance manifest for the given include globs."
     )
-    gen.add_argument("--root", default=".", help="Root directory for manifest (default: current dir)")
+    gen.add_argument(
+        "--root", default=".",
+        help="Root directory for manifest (default: current dir)",
+    )
     gen.add_argument("--out", required=True, help="Output manifest JSON file path")
-    gen.add_argument("--include", action="append", default=[], required=True, help="Glob pattern for files to include")
+    gen.add_argument(
+        "--include", action="append", default=[],
+        required=True, help="Glob pattern for files to include",
+    )
     gen.add_argument("--meta", action="append", default=[], help="Metadata in key=value format")
     gen.set_defaults(func=_cmd_generate)
 
@@ -411,7 +420,10 @@ def build_parser() -> argparse.ArgumentParser:
     ver.add_argument("--manifest", required=True, help="Manifest JSON file path")
     ver.add_argument("--out", default="", help="Output report file path (default: stdout)")
     ver.add_argument("--signature", default="", help="Signature JSON file path (optional)")
-    ver.add_argument("--public-key", default="", help="Public key PEM file path (required if signature provided)")
+    ver.add_argument(
+        "--public-key", default="",
+        help="Public key PEM file path (required if signature provided)",
+    )
     ver.set_defaults(func=_cmd_verify)
 
     return p

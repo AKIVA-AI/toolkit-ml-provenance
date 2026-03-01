@@ -10,7 +10,6 @@ import pytest
 from toolkit_ml_sbom.cli import (
     EXIT_CLI_ERROR,
     EXIT_SUCCESS,
-    EXIT_VERIFICATION_FAILED,
     _parse_meta,
     _read,
     _validate_path_for_read,
@@ -18,7 +17,6 @@ from toolkit_ml_sbom.cli import (
     _write,
     main,
 )
-
 
 # ============================================================================
 # Path Validation Tests
