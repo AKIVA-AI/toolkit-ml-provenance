@@ -5,7 +5,7 @@
 ### Docker Deployment (Recommended)
 
 ```bash
-cd ml-provenance-sbom
+cd toolkit-ml-provenance
 docker-compose up -d
 docker-compose exec provenance toolkit-mlsbom generate --model models/my-model
 ```
@@ -35,14 +35,7 @@ See `.env.example` for all options.
   run: toolkit-mlsbom generate --model $MODEL_PATH --out sbom.json
 ```
 
-### Monitoring
-
-```python
-from toolkit_provenance.monitoring import get_health_status
-status = get_health_status()
-```
-
-## ðŸ“ž Support
+## ðŸ”ž Support
 
 - Documentation: [README.md](README.md)
 - Support: <support-email>

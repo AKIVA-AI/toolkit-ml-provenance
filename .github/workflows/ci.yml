@@ -18,8 +18,8 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
         cache: 'pip'
-    - run: pip install -e ".[dev]" || pip install -e ".[dev]" --no-deps
-    - run: pytest --cov=src --cov-report=xml -v || true
+    - run: pip install -e ".[dev]"
+    - run: pytest --cov=src --cov-report=xml -v
     - uses: codecov/codecov-action@v4
       if: matrix.python-version == '3.11'
 
@@ -31,8 +31,8 @@ jobs:
       with:
         python-version: '3.11'
     - run: pip install bandit safety
-    - run: bandit -r src/ || true
-    - run: safety check || true
+    - run: bandit -r src/
+    - run: safety check
 
   lint:
     runs-on: ubuntu-latest
@@ -42,8 +42,8 @@ jobs:
       with:
         python-version: '3.11'
     - run: pip install black ruff mypy
-    - run: ruff check src/ tests/ || true
-    - run: black --check src/ tests/ || true
+    - run: ruff check src/ tests/
+    - run: black --check src/ tests/
 
   build:
     runs-on: ubuntu-latest
@@ -53,4 +53,4 @@ jobs:
     - uses: actions/setup-python@v5
     - run: pip install build twine
     - run: python -m build
-    - run: twine check dist/* || true
+    - run: twine check dist/*
