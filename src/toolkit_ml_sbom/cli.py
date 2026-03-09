@@ -6,6 +6,9 @@ import logging
 import sys
 from pathlib import Path
 
+from . import __version__
+from .cyclonedx import manifest_to_cyclonedx
+from .logging_config import JSONFormatter
 from .manifest import Manifest, build_manifest
 from .signing import (
     canonical_json_bytes,
@@ -198,7 +201,12 @@ def _cmd_generate(args: argparse.Namespace) -> int:
         return EXIT_CLI_ERROR
 
     try:
-        _write(Path(args.out), manifest.to_json())
+        fmt = getattr(args, "format", "json")
+        if fmt == "cyclonedx":
+            cdx = manifest_to_cyclonedx(manifest, tool_version=__version__)
+            _write(Path(args.out), cdx)
+        else:
+            _write(Path(args.out), manifest.to_json())
         return EXIT_SUCCESS
     except (ValueError, OSError, PermissionError) as e:
         logger.error(f"Failed to write manifest: {e}")
@@ -281,6 +289,38 @@ def _cmd_sign(args: argparse.Namespace) -> int:
     except (ValueError, OSError, PermissionError) as e:
         logger.error(f"Failed to write signature: {e}")
         return EXIT_CLI_ERROR
+
+
+def _format_table(report: dict[str, object]) -> str:
+    """Format verification report as a human-readable table.
+
+    Args:
+        report: Verification report dictionary.
+
+    Returns:
+        Formatted table string.
+    """
+    lines: list[str] = []
+    ok = report.get("ok", False)
+    sig_ok = report.get("signature_ok", True)
+    failures = report.get("failures", [])
+
+    lines.append(f"Status: {'PASS' if ok else 'FAIL'}")
+    lines.append(f"Signature: {'OK' if sig_ok else 'FAILED'}")
+
+    if isinstance(failures, list) and failures:
+        lines.append("")
+        lines.append(f"{'Path':<50} {'Reason':<20}")
+        lines.append("-" * 70)
+        for f in failures:
+            if isinstance(f, dict):
+                path = str(f.get("path", ""))
+                reason = str(f.get("reason", ""))
+                lines.append(f"{path:<50} {reason:<20}")
+    elif ok:
+        lines.append("All files verified successfully.")
+
+    return "\n".join(lines)
 
 
 def _cmd_verify(args: argparse.Namespace) -> int:
@@ -370,8 +410,11 @@ def _cmd_verify(args: argparse.Namespace) -> int:
     report = {"ok": not failures, "failures": failures, "signature_ok": sig_ok}
 
     try:
+        fmt = getattr(args, "format", "json")
         if args.out:
             _write(Path(args.out), report)
+        elif fmt == "table":
+            print(_format_table(report))
         else:
             print(json.dumps(report, indent=2, sort_keys=True))
     except (ValueError, OSError, PermissionError) as e:
@@ -396,10 +439,21 @@ def build_parser() -> argparse.ArgumentParser:
         ),
     )
     p.add_argument(
+        "--version",
+        action="version",
+        version=f"%(prog)s {__version__}",
+    )
+    p.add_argument(
         "--verbose",
         "-v",
         action="store_true",
         help="Enable verbose logging (DEBUG level)",
+    )
+    p.add_argument(
+        "--log-format",
+        choices=["text", "json"],
+        default="text",
+        help="Log output format: text (default) or json (structured)",
     )
     sub = p.add_subparsers(dest="cmd", required=True)
 
@@ -421,6 +475,12 @@ def build_parser() -> argparse.ArgumentParser:
     )
     gen.add_argument(
         "--meta", action="append", default=[], help="Metadata in key=value format"
+    )
+    gen.add_argument(
+        "--format",
+        choices=["json", "cyclonedx"],
+        default="json",
+        help="Output format: json (default) or cyclonedx (CycloneDX 1.5 JSON)",
     )
     gen.set_defaults(func=_cmd_generate)
 
@@ -458,6 +518,12 @@ def build_parser() -> argparse.ArgumentParser:
         default="",
         help="Public key PEM file path (required if signature provided)",
     )
+    ver.add_argument(
+        "--format",
+        choices=["json", "table"],
+        default="json",
+        help="Output format: json (default) or table (human-readable)",
+    )
     ver.set_defaults(func=_cmd_verify)
 
     return p
@@ -475,12 +541,22 @@ def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
 
-    logging.basicConfig(
-        level=logging.DEBUG if args.verbose else logging.WARNING,
-        format="%(asctime)s | %(levelname)-8s | %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S",
-        stream=sys.stderr,
-    )
+    log_level = logging.DEBUG if args.verbose else logging.WARNING
+    handler = logging.StreamHandler(sys.stderr)
+    handler.setLevel(log_level)
+
+    log_format = getattr(args, "log_format", "text")
+    if log_format == "json":
+        handler.setFormatter(JSONFormatter())
+    else:
+        handler.setFormatter(
+            logging.Formatter(
+                fmt="%(asctime)s | %(levelname)-8s | %(message)s",
+                datefmt="%Y-%m-%d %H:%M:%S",
+            )
+        )
+
+    logging.basicConfig(level=log_level, handlers=[handler])
 
     try:
         return int(args.func(args))
