@@ -263,7 +263,9 @@ def _cmd_sign(args: argparse.Namespace) -> int:
         return EXIT_CLI_ERROR
 
     try:
-        private_pem = _validate_path_for_read(private_key_path).read_text(encoding="utf-8")
+        private_pem = _validate_path_for_read(private_key_path).read_text(
+            encoding="utf-8"
+        )
         logger.debug("Private key loaded")
     except (FileNotFoundError, PermissionError, UnicodeDecodeError) as e:
         logger.error(f"Failed to read private key: {e}")
@@ -355,10 +357,14 @@ def _cmd_verify(args: argparse.Namespace) -> int:
             sha = sha256_file(p)
             if sha != str(e.get("sha256") or ""):
                 logger.warning(f"Hash mismatch: {e.get('path')}")
-                failures.append({"path": str(e.get("path") or ""), "reason": "hash_mismatch"})
+                failures.append(
+                    {"path": str(e.get("path") or ""), "reason": "hash_mismatch"}
+                )
         except Exception as exc:
             logger.error(f"Failed to hash file {e.get('path')}: {exc}")
-            failures.append({"path": str(e.get("path") or ""), "reason": f"hash_error:{exc}"})
+            failures.append(
+                {"path": str(e.get("path") or ""), "reason": f"hash_error:{exc}"}
+            )
 
     if not failures:
         logger.info(f"All {len(m.entries)} files verified successfully")
@@ -376,7 +382,9 @@ def _cmd_verify(args: argparse.Namespace) -> int:
                 raise ValueError("Signature file must contain a JSON object")
             sig_b64 = str(sig_obj.get("signature_b64") or "")
 
-            public_pem = _validate_path_for_read(Path(args.public_key)).read_text(encoding="utf-8")
+            public_pem = _validate_path_for_read(Path(args.public_key)).read_text(
+                encoding="utf-8"
+            )
 
             sig_ok = verify_bytes(
                 payload=canonical_json_bytes(m.to_json()),
@@ -465,7 +473,9 @@ def build_parser() -> argparse.ArgumentParser:
         required=True,
         help="Glob pattern for files to include",
     )
-    gen.add_argument("--meta", action="append", default=[], help="Metadata in key=value format")
+    gen.add_argument(
+        "--meta", action="append", default=[], help="Metadata in key=value format"
+    )
     gen.add_argument(
         "--format",
         choices=["json", "cyclonedx"],
@@ -474,21 +484,35 @@ def build_parser() -> argparse.ArgumentParser:
     )
     gen.set_defaults(func=_cmd_generate)
 
-    keygen = sub.add_parser("keygen", help="Generate an Ed25519 keypair for signing manifests.")
-    keygen.add_argument("--private-key", required=True, help="Output private key file path")
-    keygen.add_argument("--public-key", required=True, help="Output public key file path")
+    keygen = sub.add_parser(
+        "keygen", help="Generate an Ed25519 keypair for signing manifests."
+    )
+    keygen.add_argument(
+        "--private-key", required=True, help="Output private key file path"
+    )
+    keygen.add_argument(
+        "--public-key", required=True, help="Output public key file path"
+    )
     keygen.set_defaults(func=_cmd_keygen)
 
-    sign = sub.add_parser("sign", help="Sign a manifest and emit a detached signature JSON.")
+    sign = sub.add_parser(
+        "sign", help="Sign a manifest and emit a detached signature JSON."
+    )
     sign.add_argument("--manifest", required=True, help="Manifest JSON file path")
     sign.add_argument("--private-key", required=True, help="Private key PEM file path")
-    sign.add_argument("--out", default="", help="Output signature file path (default: stdout)")
+    sign.add_argument(
+        "--out", default="", help="Output signature file path (default: stdout)"
+    )
     sign.set_defaults(func=_cmd_sign)
 
     ver = sub.add_parser("verify", help="Verify a manifest against current files.")
     ver.add_argument("--manifest", required=True, help="Manifest JSON file path")
-    ver.add_argument("--out", default="", help="Output report file path (default: stdout)")
-    ver.add_argument("--signature", default="", help="Signature JSON file path (optional)")
+    ver.add_argument(
+        "--out", default="", help="Output report file path (default: stdout)"
+    )
+    ver.add_argument(
+        "--signature", default="", help="Signature JSON file path (optional)"
+    )
     ver.add_argument(
         "--public-key",
         default="",

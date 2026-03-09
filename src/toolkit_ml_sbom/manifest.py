@@ -88,7 +88,11 @@ def build_manifest(*, root: Path, paths: list[Path], meta: dict[str, str]) -> Ma
 
 
 def _entry(*, root: Path, path: Path) -> dict[str, Any]:
-    rel = str(path.resolve().relative_to(root.resolve())) if path.is_absolute() else str(path)
+    rel = (
+        str(path.resolve().relative_to(root.resolve()))
+        if path.is_absolute()
+        else str(path)
+    )
     return {
         "path": rel,
         "size": int(path.stat().st_size),
