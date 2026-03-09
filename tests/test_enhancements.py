@@ -1,4 +1,4 @@
-﻿"""Tests for ml-provenance-sbom enhancements."""
+"""Tests for ml-provenance-sbom enhancements."""
 
 from __future__ import annotations
 

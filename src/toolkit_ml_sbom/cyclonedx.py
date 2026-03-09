@@ -76,9 +76,7 @@ def manifest_to_cyclonedx(manifest: Manifest, *, tool_version: str = "0.1.0") ->
 
     # Add custom metadata
     for key, value in sorted(manifest.meta.items()):
-        metadata["properties"].append(
-            {"name": f"custom:{key}", "value": value}
-        )
+        metadata["properties"].append({"name": f"custom:{key}", "value": value})
 
     cdx: dict[str, Any] = {
         "bomFormat": "CycloneDX",

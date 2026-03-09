@@ -16,7 +16,6 @@ from toolkit_ml_sbom import (
     sha256_file,
 )
 from toolkit_ml_sbom.cli import (
-    EXIT_CLI_ERROR,
     EXIT_SUCCESS,
     EXIT_VERIFICATION_FAILED,
     _format_table,
@@ -25,7 +24,6 @@ from toolkit_ml_sbom.cli import (
 )
 from toolkit_ml_sbom.cyclonedx import cyclonedx_to_json_string, manifest_to_cyclonedx
 from toolkit_ml_sbom.logging_config import JSONFormatter
-
 
 # ============================================================================
 # --version flag
@@ -163,13 +161,19 @@ def test_cli_generate_cyclonedx(tmp_path: Path) -> None:
     f.write_bytes(b"weights")
     out = tmp_path / "sbom.cdx.json"
 
-    rc = main([
-        "generate",
-        "--root", str(tmp_path),
-        "--out", str(out),
-        "--include", "*.bin",
-        "--format", "cyclonedx",
-    ])
+    rc = main(
+        [
+            "generate",
+            "--root",
+            str(tmp_path),
+            "--out",
+            str(out),
+            "--include",
+            "*.bin",
+            "--format",
+            "cyclonedx",
+        ]
+    )
     assert rc == EXIT_SUCCESS
     data = json.loads(out.read_text(encoding="utf-8"))
     assert data["bomFormat"] == "CycloneDX"
@@ -233,13 +237,20 @@ def test_cli_log_format_json(tmp_path: Path) -> None:
     f.write_text("data", encoding="utf-8")
     out = tmp_path / "m.json"
 
-    rc = main([
-        "--verbose", "--log-format", "json",
-        "generate",
-        "--root", str(tmp_path),
-        "--out", str(out),
-        "--include", "*.txt",
-    ])
+    rc = main(
+        [
+            "--verbose",
+            "--log-format",
+            "json",
+            "generate",
+            "--root",
+            str(tmp_path),
+            "--out",
+            str(out),
+            "--include",
+            "*.txt",
+        ]
+    )
     assert rc == EXIT_SUCCESS
 
 
@@ -275,7 +286,11 @@ def test_format_table_fail() -> None:
 
 def test_format_table_sig_failed() -> None:
     """Table format shows signature failure."""
-    report = {"ok": False, "failures": [{"path": "", "reason": "signature_invalid"}], "signature_ok": False}
+    report = {
+        "ok": False,
+        "failures": [{"path": "", "reason": "signature_invalid"}],
+        "signature_ok": False,
+    }
     table = _format_table(report)
     assert "FAILED" in table
 
@@ -287,16 +302,27 @@ def test_cli_verify_table_format(tmp_path: Path, capsys: pytest.CaptureFixture[s
     (root / "a.txt").write_text("hello", encoding="utf-8")
     manifest = tmp_path / "m.json"
 
-    main([
-        "generate", "--root", str(root),
-        "--out", str(manifest),
-        "--include", "*.txt",
-    ])
+    main(
+        [
+            "generate",
+            "--root",
+            str(root),
+            "--out",
+            str(manifest),
+            "--include",
+            "*.txt",
+        ]
+    )
 
-    rc = main([
-        "verify", "--manifest", str(manifest),
-        "--format", "table",
-    ])
+    rc = main(
+        [
+            "verify",
+            "--manifest",
+            str(manifest),
+            "--format",
+            "table",
+        ]
+    )
     assert rc == EXIT_SUCCESS
     captured = capsys.readouterr()
     assert "PASS" in captured.out
@@ -309,7 +335,14 @@ def test_cli_verify_table_format(tmp_path: Path, capsys: pytest.CaptureFixture[s
 
 def test_empty_manifest_from_json() -> None:
     """Manifest.from_json with empty entries list."""
-    obj = {"version": 1, "created_ts": 0.0, "root": ".", "git_commit": "", "entries": [], "meta": {}}
+    obj = {
+        "version": 1,
+        "created_ts": 0.0,
+        "root": ".",
+        "git_commit": "",
+        "entries": [],
+        "meta": {},
+    }
     m = Manifest.from_json(obj)
     assert m.entries == []
     assert m.version == 1
@@ -406,11 +439,17 @@ def test_verify_corrupt_file(tmp_path: Path) -> None:
     (root / "data.txt").write_text("original", encoding="utf-8")
 
     manifest = tmp_path / "m.json"
-    main([
-        "generate", "--root", str(root),
-        "--out", str(manifest),
-        "--include", "*.txt",
-    ])
+    main(
+        [
+            "generate",
+            "--root",
+            str(root),
+            "--out",
+            str(manifest),
+            "--include",
+            "*.txt",
+        ]
+    )
 
     # Corrupt the file
     (root / "data.txt").write_text("modified", encoding="utf-8")
@@ -458,11 +497,17 @@ def test_invalid_signature_verify(tmp_path: Path) -> None:
     sig_data["signature_b64"] = "AAAA" + sig_data["signature_b64"][4:]
     sig_file.write_text(json.dumps(sig_data), encoding="utf-8")
 
-    rc = main([
-        "verify", "--manifest", str(manifest),
-        "--signature", str(sig_file),
-        "--public-key", str(pub),
-    ])
+    rc = main(
+        [
+            "verify",
+            "--manifest",
+            str(manifest),
+            "--signature",
+            str(sig_file),
+            "--public-key",
+            str(pub),
+        ]
+    )
     assert rc == EXIT_VERIFICATION_FAILED
 
 
@@ -470,7 +515,6 @@ def test_build_parser_has_version() -> None:
     """Parser includes --version action."""
     parser = build_parser()
     # Check that --version is registered
-    version_actions = [a for a in parser._actions if isinstance(a, type(parser._actions[0])) and "--version" in getattr(a, "option_strings", [])]
-    # Simpler check: just try parsing --version
+    # Just try parsing --version
     with pytest.raises(SystemExit, match="0"):
         parser.parse_args(["--version"])
