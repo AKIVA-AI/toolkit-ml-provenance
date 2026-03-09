@@ -51,7 +51,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - uses: actions/setup-python@v5
-    - run: pip install build twine
+    - run: pip install build "twine<6"
     - run: python -m build
     - name: Check package metadata
       run: twine check dist/*
