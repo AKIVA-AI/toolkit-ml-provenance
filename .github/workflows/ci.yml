@@ -20,7 +20,7 @@ jobs:
         cache: 'pip'
     - run: pip install -e ".[dev]"
     - run: pytest --cov=src --cov-report=xml -v
-    - uses: codecov/codecov-action@v4
+    - uses: codecov/codecov-action@v5
       if: matrix.python-version == '3.11'
 
   security:
