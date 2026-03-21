@@ -51,7 +51,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - uses: actions/setup-python@v5
-    - run: pip install "setuptools>=69,<83" build twine
+    - run: pip install "setuptools>=69,<77" build twine
     - run: python -m build
     - name: Check package metadata
       run: twine check dist/*
