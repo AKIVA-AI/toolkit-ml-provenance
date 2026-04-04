@@ -8,6 +8,7 @@ contracts with appropriate permission scope and approval policy.
 'keygen' is WORKSPACE_WRITE + REQUIRE_APPROVAL (writes key files to disk).
 'sign' is WORKSPACE_WRITE + REQUIRE_APPROVAL (writes signature files to disk).
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -139,7 +140,10 @@ TOOLKIT_TOOL_SPECS: dict[str, ToolkitCommandSpec] = {
                 "type": "object",
                 "properties": {
                     "manifest": {"type": "string", "description": "Manifest JSON path"},
-                    "signature": {"type": "string", "description": "Signature JSON path (optional)"},
+                    "signature": {
+                        "type": "string",
+                        "description": "Signature JSON path (optional)",
+                    },
                     "out": {"type": "string"},
                 },
                 "required": ["manifest"],

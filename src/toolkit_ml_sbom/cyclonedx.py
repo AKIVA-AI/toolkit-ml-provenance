@@ -15,9 +15,7 @@ from typing import Any
 from .manifest import Manifest
 
 
-def manifest_to_cyclonedx(
-    manifest: Manifest, *, tool_version: str = "0.1.0"
-) -> dict[str, Any]:
+def manifest_to_cyclonedx(manifest: Manifest, *, tool_version: str = "0.1.0") -> dict[str, Any]:
     """Convert a Manifest to CycloneDX 1.5 JSON format.
 
     Args:

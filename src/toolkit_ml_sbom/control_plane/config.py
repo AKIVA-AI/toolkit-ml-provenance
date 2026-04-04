@@ -6,6 +6,7 @@ Three-tier hierarchy (mirrors Akiva platform pattern):
   Level 1 -- Toolkit config (pyproject.toml / config file)
   Level 2 -- CLI overrides (argv flags)
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -27,13 +28,13 @@ class ToolkitConfigContract:
     version: str = "0.1.0"
 
     # -- Runtime behaviour -----------------------------------------------------
-    log_format: str = "json"          # 'json' | 'text'
+    log_format: str = "json"  # 'json' | 'text'
     structured_logging: bool = True
-    output_format: str = "json"       # 'json' | 'cyclonedx'
+    output_format: str = "json"  # 'json' | 'cyclonedx'
 
     # -- Manifest defaults -----------------------------------------------------
     root_dir: str = "."
-    hash_algorithm: str = "sha256"    # 'sha256' | 'sha512'
+    hash_algorithm: str = "sha256"  # 'sha256' | 'sha512'
 
     # -- Extension -------------------------------------------------------------
     extra: dict[str, Any] = field(default_factory=dict)
