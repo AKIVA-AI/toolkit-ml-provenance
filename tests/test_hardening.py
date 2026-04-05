@@ -295,7 +295,9 @@ def test_format_table_sig_failed() -> None:
     assert "FAILED" in table
 
 
-def test_cli_verify_table_format(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+def test_cli_verify_table_format(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
     """CLI verify --format table produces table output."""
     root = tmp_path / "repo"
     root.mkdir()
@@ -398,7 +400,9 @@ def test_manifest_round_trip() -> None:
     assert m2.meta == m.meta
 
 
-def test_verify_empty_manifest(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+def test_verify_empty_manifest(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
     """Verifying an empty manifest (no entries) should pass."""
     manifest_data = {
         "version": 1,
@@ -483,7 +487,9 @@ def test_invalid_signature_verify(tmp_path: Path) -> None:
     (root / "a.txt").write_text("hello", encoding="utf-8")
 
     manifest = tmp_path / "m.json"
-    main(["generate", "--root", str(root), "--out", str(manifest), "--include", "*.txt"])
+    main(
+        ["generate", "--root", str(root), "--out", str(manifest), "--include", "*.txt"]
+    )
 
     priv = tmp_path / "priv.pem"
     pub = tmp_path / "pub.pem"

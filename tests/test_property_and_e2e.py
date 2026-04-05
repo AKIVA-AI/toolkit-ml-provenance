@@ -22,7 +22,9 @@ from hypothesis import strategies as st
 
 @given(data=st.binary(min_size=0, max_size=4096))
 @settings(max_examples=50)
-def test_sha256_deterministic(data: bytes, tmp_path_factory: pytest.TempPathFactory) -> None:
+def test_sha256_deterministic(
+    data: bytes, tmp_path_factory: pytest.TempPathFactory
+) -> None:
     """SHA-256 hash of identical content must always be identical."""
     from toolkit_ml_sbom.hashing import sha256_file
 
@@ -56,12 +58,16 @@ _ALPHA = "abcdefghijklmnopqrstuvwxyz"
 @given(
     keys=st.lists(
         st.text(min_size=1, max_size=20, alphabet=_ALPHA),
-        min_size=0, max_size=5, unique=True,
+        min_size=0,
+        max_size=5,
+        unique=True,
     ),
     values=st.lists(st.text(min_size=1, max_size=20), min_size=0, max_size=5),
 )
 @settings(max_examples=30, suppress_health_check=[HealthCheck.function_scoped_fixture])
-def test_manifest_round_trip(keys: list[str], values: list[str], tmp_path: Path) -> None:
+def test_manifest_round_trip(
+    keys: list[str], values: list[str], tmp_path: Path
+) -> None:
     """Manifest serialization round-trips preserve all data."""
     from toolkit_ml_sbom.manifest import Manifest, build_manifest
 
@@ -80,17 +86,22 @@ def test_manifest_round_trip(keys: list[str], values: list[str], tmp_path: Path)
     assert m2.version == m.version
 
 
-@given(obj=st.recursive(
-    st.one_of(
-        st.none(), st.booleans(), st.integers(),
-        st.floats(allow_nan=False), st.text(),
-    ),
-    lambda children: (
-        st.lists(children, max_size=5)
-        | st.dictionaries(st.text(min_size=1, max_size=10), children, max_size=5)
-    ),
-    max_leaves=20,
-))
+@given(
+    obj=st.recursive(
+        st.one_of(
+            st.none(),
+            st.booleans(),
+            st.integers(),
+            st.floats(allow_nan=False),
+            st.text(),
+        ),
+        lambda children: (
+            st.lists(children, max_size=5)
+            | st.dictionaries(st.text(min_size=1, max_size=10), children, max_size=5)
+        ),
+        max_leaves=20,
+    )
+)
 @settings(max_examples=50)
 def test_canonical_json_deterministic(obj: object) -> None:
     """canonical_json_bytes must produce identical output for identical input."""
@@ -104,11 +115,14 @@ def test_canonical_json_deterministic(obj: object) -> None:
 @given(
     keys=st.lists(
         st.text(min_size=1, max_size=10, alphabet=_ALPHA),
-        min_size=1, max_size=5, unique=True,
+        min_size=1,
+        max_size=5,
+        unique=True,
     ),
     values=st.lists(
         st.text(min_size=1, max_size=10, alphabet=_ALPHA),
-        min_size=1, max_size=5,
+        min_size=1,
+        max_size=5,
     ),
 )
 @settings(max_examples=30, suppress_health_check=[HealthCheck.function_scoped_fixture])
@@ -179,11 +193,16 @@ def test_e2e_generate_verify_roundtrip(tmp_path: Path) -> None:
     # Generate
     result = _run_cli(
         "generate",
-        "--root", str(tmp_path),
-        "--include", "*.bin",
-        "--include", "*.json",
-        "--meta", "framework=pytorch",
-        "--out", manifest_path,
+        "--root",
+        str(tmp_path),
+        "--include",
+        "*.bin",
+        "--include",
+        "*.json",
+        "--meta",
+        "framework=pytorch",
+        "--out",
+        manifest_path,
     )
     assert result.returncode == 0, f"generate failed: {result.stderr}"
     assert Path(manifest_path).exists()
@@ -203,10 +222,14 @@ def test_e2e_generate_cyclonedx(tmp_path: Path) -> None:
 
     result = _run_cli(
         "generate",
-        "--root", str(tmp_path),
-        "--include", "*.pt",
-        "--format", "cyclonedx",
-        "--out", sbom_path,
+        "--root",
+        str(tmp_path),
+        "--include",
+        "*.pt",
+        "--format",
+        "cyclonedx",
+        "--out",
+        sbom_path,
     )
     assert result.returncode == 0, f"cyclonedx generate failed: {result.stderr}"
 
@@ -229,7 +252,13 @@ def test_e2e_sign_verify_roundtrip(tmp_path: Path) -> None:
 
     # Generate
     result = _run_cli(
-        "generate", "--root", str(tmp_path), "--include", "*.csv", "--out", manifest_path
+        "generate",
+        "--root",
+        str(tmp_path),
+        "--include",
+        "*.csv",
+        "--out",
+        manifest_path,
     )
     assert result.returncode == 0
 
@@ -241,16 +270,25 @@ def test_e2e_sign_verify_roundtrip(tmp_path: Path) -> None:
 
     # Sign
     result = _run_cli(
-        "sign", "--manifest", manifest_path, "--private-key", priv_path, "--out", sig_path
+        "sign",
+        "--manifest",
+        manifest_path,
+        "--private-key",
+        priv_path,
+        "--out",
+        sig_path,
     )
     assert result.returncode == 0
 
     # Verify with signature
     result = _run_cli(
         "verify",
-        "--manifest", manifest_path,
-        "--signature", sig_path,
-        "--public-key", pub_path,
+        "--manifest",
+        manifest_path,
+        "--signature",
+        sig_path,
+        "--public-key",
+        pub_path,
     )
     assert result.returncode == 0
     report = json.loads(result.stdout)
@@ -266,7 +304,13 @@ def test_e2e_verify_corruption_detected(tmp_path: Path) -> None:
 
     # Generate
     result = _run_cli(
-        "generate", "--root", str(tmp_path), "--include", "*.bin", "--out", manifest_path
+        "generate",
+        "--root",
+        str(tmp_path),
+        "--include",
+        "*.bin",
+        "--out",
+        manifest_path,
     )
     assert result.returncode == 0
 
@@ -287,7 +331,15 @@ def test_e2e_verify_table_format(tmp_path: Path) -> None:
     f.write_text("hello")
     manifest_path = str(tmp_path / "manifest.json")
 
-    _run_cli("generate", "--root", str(tmp_path), "--include", "*.txt", "--out", manifest_path)
+    _run_cli(
+        "generate",
+        "--root",
+        str(tmp_path),
+        "--include",
+        "*.txt",
+        "--out",
+        manifest_path,
+    )
     result = _run_cli("verify", "--manifest", manifest_path, "--format", "table")
     assert result.returncode == 0
     assert "PASS" in result.stdout
@@ -296,8 +348,13 @@ def test_e2e_verify_table_format(tmp_path: Path) -> None:
 def test_e2e_generate_missing_root() -> None:
     """Generate with non-existent root returns error."""
     result = _run_cli(
-        "generate", "--root", "/nonexistent/path",
-        "--include", "*", "--out", "x.json",
+        "generate",
+        "--root",
+        "/nonexistent/path",
+        "--include",
+        "*",
+        "--out",
+        "x.json",
     )
     assert result.returncode != 0
 
@@ -311,7 +368,13 @@ def test_e2e_audit_log(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     manifest_path = str(tmp_path / "manifest.json")
 
     _run_cli(
-        "generate", "--root", str(tmp_path), "--include", "*.txt", "--out", manifest_path
+        "generate",
+        "--root",
+        str(tmp_path),
+        "--include",
+        "*.txt",
+        "--out",
+        manifest_path,
     )
     # Audit log is written from within the process, so we need to invoke directly
     # for env var to take effect. Subprocess inherits env but audit_log module

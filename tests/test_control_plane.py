@@ -43,7 +43,9 @@ class TestPermissionScope:
         assert boundary.scope_allows(PermissionScope.READ_ONLY)
 
     def test_lower_does_not_satisfy_higher(self) -> None:
-        boundary = AuthorityBoundary(scope=PermissionScope.READ_ONLY, approval=ApprovalPolicy.AUTO)
+        boundary = AuthorityBoundary(
+            scope=PermissionScope.READ_ONLY, approval=ApprovalPolicy.AUTO
+        )
         assert not boundary.scope_allows(PermissionScope.WORKSPACE_WRITE)
         assert not boundary.scope_allows(PermissionScope.FULL_ACCESS)
 
@@ -57,7 +59,9 @@ class TestApprovalPolicy:
 
 class TestAuthorityBoundary:
     def test_is_denied(self) -> None:
-        b = AuthorityBoundary(scope=PermissionScope.READ_ONLY, approval=ApprovalPolicy.DENY)
+        b = AuthorityBoundary(
+            scope=PermissionScope.READ_ONLY, approval=ApprovalPolicy.DENY
+        )
         assert b.is_denied()
         assert not b.needs_approval()
 
@@ -69,12 +73,16 @@ class TestAuthorityBoundary:
         assert not b.is_denied()
 
     def test_auto_neither(self) -> None:
-        b = AuthorityBoundary(scope=PermissionScope.WORKSPACE_WRITE, approval=ApprovalPolicy.AUTO)
+        b = AuthorityBoundary(
+            scope=PermissionScope.WORKSPACE_WRITE, approval=ApprovalPolicy.AUTO
+        )
         assert not b.is_denied()
         assert not b.needs_approval()
 
     def test_sandbox_defaults_none(self) -> None:
-        b = AuthorityBoundary(scope=PermissionScope.READ_ONLY, approval=ApprovalPolicy.AUTO)
+        b = AuthorityBoundary(
+            scope=PermissionScope.READ_ONLY, approval=ApprovalPolicy.AUTO
+        )
         assert b.sandbox is None
 
 

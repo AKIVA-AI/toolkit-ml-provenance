@@ -99,8 +99,14 @@ TOOLKIT_TOOL_SPECS: dict[str, ToolkitCommandSpec] = {
             input_schema={
                 "type": "object",
                 "properties": {
-                    "private_key": {"type": "string", "description": "Output private key path"},
-                    "public_key": {"type": "string", "description": "Output public key path"},
+                    "private_key": {
+                        "type": "string",
+                        "description": "Output private key path",
+                    },
+                    "public_key": {
+                        "type": "string",
+                        "description": "Output public key path",
+                    },
                 },
                 "required": ["private_key", "public_key"],
             },
@@ -120,7 +126,10 @@ TOOLKIT_TOOL_SPECS: dict[str, ToolkitCommandSpec] = {
                 "type": "object",
                 "properties": {
                     "manifest": {"type": "string", "description": "Manifest JSON path"},
-                    "private_key": {"type": "string", "description": "Private key PEM path"},
+                    "private_key": {
+                        "type": "string",
+                        "description": "Private key PEM path",
+                    },
                     "out": {"type": "string", "description": "Output signature path"},
                 },
                 "required": ["manifest", "private_key"],
