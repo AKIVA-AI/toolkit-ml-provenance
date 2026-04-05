@@ -351,11 +351,11 @@ def _cmd_verify(args: argparse.Namespace) -> int:
     failures: list[dict[str, str]] = []
 
     # Verify file hashes
-    for e in m.entries:
-        p = root / str(e.get("path") or "")
+    for entry in m.entries:
+        p = root / str(entry.get("path") or "")
         if not p.exists() or not p.is_file():
-            logger.warning(f"File missing: {e.get('path')}")
-            failures.append({"path": str(e.get("path") or ""), "reason": "missing"})
+            logger.warning(f"File missing: {entry.get('path')}")
+            failures.append({"path": str(entry.get("path") or ""), "reason": "missing"})
             continue
 
         # lazy import to avoid circulars
@@ -363,15 +363,15 @@ def _cmd_verify(args: argparse.Namespace) -> int:
 
         try:
             sha = sha256_file(p)
-            if sha != str(e.get("sha256") or ""):
-                logger.warning(f"Hash mismatch: {e.get('path')}")
+            if sha != str(entry.get("sha256") or ""):
+                logger.warning(f"Hash mismatch: {entry.get('path')}")
                 failures.append(
-                    {"path": str(e.get("path") or ""), "reason": "hash_mismatch"}
+                    {"path": str(entry.get("path") or ""), "reason": "hash_mismatch"}
                 )
         except Exception as exc:
-            logger.error(f"Failed to hash file {e.get('path')}: {exc}")
+            logger.error(f"Failed to hash file {entry.get('path')}: {exc}")
             failures.append(
-                {"path": str(e.get("path") or ""), "reason": f"hash_error:{exc}"}
+                {"path": str(entry.get("path") or ""), "reason": f"hash_error:{exc}"}
             )
 
     if not failures:

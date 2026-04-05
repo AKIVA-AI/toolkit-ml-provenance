@@ -36,7 +36,7 @@ def _make_spec(
     return ToolSpec(
         name=name,
         description=description,
-        category="tool",
+        category="tool",  # type: ignore[arg-type]
         version="0.1.0",
         owner="toolkit-ml-provenance",
         permission_scope=scope,
