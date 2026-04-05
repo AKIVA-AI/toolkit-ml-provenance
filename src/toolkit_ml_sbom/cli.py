@@ -4,9 +4,11 @@ import argparse
 import json
 import logging
 import sys
+import time
 from pathlib import Path
 
 from . import __version__
+from .audit_log import configure_audit_log, emit_audit_record
 from .cyclonedx import manifest_to_cyclonedx
 from .logging_config import JSONFormatter
 from .manifest import Manifest, build_manifest
@@ -236,6 +238,10 @@ def _cmd_keygen(args: argparse.Namespace) -> int:
     try:
         private_key_path.parent.mkdir(parents=True, exist_ok=True)
         private_key_path.write_text(kp.private_key_pem, encoding="utf-8")
+        try:
+            private_key_path.chmod(0o600)
+        except OSError:
+            logger.warning(f"Could not set restrictive permissions on {private_key_path}")
         logger.info(f"Wrote private key to: {private_key_path}")
 
         public_key_path.parent.mkdir(parents=True, exist_ok=True)
@@ -534,16 +540,58 @@ def main(argv: list[str] | None = None) -> int:
 
     logging.basicConfig(level=log_level, handlers=[handler])
 
+    configure_audit_log()
+
+    cmd_name = args.cmd or "unknown"
+    sanitized_args = {
+        k: str(v) for k, v in vars(args).items()
+        if k not in ("func", "cmd") and "key" not in k.lower()
+    }
+    start_time = time.monotonic()
+
     try:
-        return int(args.func(args))
+        exit_code = int(args.func(args))
+        elapsed = (time.monotonic() - start_time) * 1000
+        emit_audit_record(
+            command=cmd_name,
+            args=sanitized_args,
+            outcome="success" if exit_code == 0 else "failure",
+            exit_code=exit_code,
+            duration_ms=elapsed,
+        )
+        return exit_code
     except (ValueError, FileNotFoundError, PermissionError) as e:
         logger.error(f"{type(e).__name__}: {e}")
+        elapsed = (time.monotonic() - start_time) * 1000
+        emit_audit_record(
+            command=cmd_name,
+            args=sanitized_args,
+            outcome=f"error:{type(e).__name__}",
+            exit_code=EXIT_CLI_ERROR,
+            duration_ms=elapsed,
+        )
         return EXIT_CLI_ERROR
     except KeyboardInterrupt:
         logger.warning("Interrupted by user")
+        elapsed = (time.monotonic() - start_time) * 1000
+        emit_audit_record(
+            command=cmd_name,
+            args=sanitized_args,
+            outcome="interrupted",
+            exit_code=EXIT_UNEXPECTED_ERROR,
+            duration_ms=elapsed,
+        )
         return EXIT_UNEXPECTED_ERROR
     except Exception as e:
         logger.exception(f"Unexpected error: {e}")
+        elapsed = (time.monotonic() - start_time) * 1000
+        emit_audit_record(
+            command=cmd_name,
+            args=sanitized_args,
+            outcome=f"unexpected:{type(e).__name__}",
+            exit_code=EXIT_UNEXPECTED_ERROR,
+            duration_ms=elapsed,
+        )
         print(
             "\nAn unexpected error occurred. Please report this issue.",
             file=sys.stderr,

@@ -37,11 +37,15 @@ def manifest_to_cyclonedx(manifest: Manifest, *, tool_version: str = "0.1.0") ->
         # Generate a deterministic BOM ref from the path
         bom_ref = hashlib.sha256(path.encode("utf-8")).hexdigest()[:16]
 
+        # Generate purl for data component
+        purl = f"pkg:generic/{path.replace('/', '%2F')}?checksum=sha256:{sha256}"
+
         component: dict[str, Any] = {
             "type": "data",
             "bom-ref": bom_ref,
             "name": path,
             "version": "",
+            "purl": purl,
             "hashes": [
                 {
                     "alg": "SHA-256",
