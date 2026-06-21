@@ -34,7 +34,7 @@ toolkit-mlsbom = "toolkit_ml_sbom.cli:main"
 
 [project.optional-dependencies]
 signing = [
-  "cryptography>=43.0.0",
+  "cryptography>=46.0.7",
 ]
 dev = [
   "pytest>=8.0.0",
@@ -42,7 +42,7 @@ dev = [
   "hypothesis>=6.100.0",
   "ruff>=0.6.0",
   "pyright>=1.1.380",
-  "cryptography>=43.0.0",
+  "cryptography>=46.0.7",
 ]
 
 [tool.pytest.ini_options]
