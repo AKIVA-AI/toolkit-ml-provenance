@@ -1,11 +1,9 @@
 # Quick Start
 
-## Install (from source)
+## Install
 
 ```bash
-git clone https://github.com/AKIVA-AI/toolkit-ml-provenance.git
-cd toolkit-ml-provenance
-pip install -e ".[signing]"
+pip install "toolkit-ml-provenance[signing]"
 toolkit-mlsbom --version
 ```
 

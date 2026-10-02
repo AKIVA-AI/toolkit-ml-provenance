@@ -4,13 +4,13 @@
 
 ## Install
 
-From source (not yet on PyPI):
+From PyPI:
 
 ```bash
-pip install -e ".[signing]"
+pip install "toolkit-ml-provenance[signing]"
 ```
 
-Or build the container image:
+Or build the container image from a clone of the repository:
 
 ```bash
 docker compose up -d
@@ -23,6 +23,9 @@ Generate and sign a manifest when a model is built, then verify it before the
 model is used:
 
 ```yaml
+- name: Install
+  run: pip install "toolkit-ml-provenance[signing]"
+
 - name: Generate and sign manifest
   run: |
     toolkit-mlsbom generate --root "$MODEL_PATH" --include "**/*" --out manifest.json
