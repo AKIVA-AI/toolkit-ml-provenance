@@ -1,5 +1,8 @@
 # Toolkit ML Provenance
 
+[![PyPI](https://img.shields.io/pypi/v/toolkit-ml-provenance.svg)](https://pypi.org/project/toolkit-ml-provenance/)
+[![Python versions](https://img.shields.io/pypi/pyversions/toolkit-ml-provenance.svg)](https://pypi.org/project/toolkit-ml-provenance/)
+
 `toolkit-mlsbom` is a small command-line tool that records the SHA-256 hash of
 every file in an ML artifact set (datasets, configs, code, model weights) into a
 JSON manifest, optionally signs that manifest with an Ed25519 key, and later
@@ -18,9 +21,7 @@ An AI-BOM for a small public Hugging Face model, with an unsafe-pickle gate,
 a signed report and a later integrity check:
 
 ```bash
-git clone https://github.com/AKIVA-AI/toolkit-ml-provenance.git
-cd toolkit-ml-provenance
-pip install -e ".[hf,signing]"
+pip install "toolkit-ml-provenance[hf,signing]"
 
 # 1. Download the model at a pinned commit and write a CycloneDX 1.6 ML-BOM.
 #    Fails (exit 4) if a pickle imports something dangerous.
@@ -72,24 +73,23 @@ OpenSSF Model Signing.
 | Sign any file, Sigstore keyless | Working | Needs the `sigstore` extra. Verifies DSSE and message-signature bundles, always against a pinned identity and issuer. |
 | OpenSSF Model Signing (`sign-model`, `verify-model`) | Working | Needs the `oms` extra (`model-signing`). ECDSA key or Sigstore keyless. Interoperates with the `model_signing` CLI. |
 | Encrypted keys, KMS/HSM | Planned | Not implemented. |
-| PyPI package | Planned | Not published yet; install from source. The release workflow is ready and waits on the one-time PyPI setup in [RELEASING.md](RELEASING.md). |
+| PyPI package | Working | `pip install toolkit-ml-provenance`; see [Install](#install). |
 
 ## Install
 
-Install from source (the package is not on PyPI yet):
+Requires Python 3.10+.
 
 ```bash
-git clone https://github.com/AKIVA-AI/toolkit-ml-provenance.git
-cd toolkit-ml-provenance
-pip install -e .              # core, no dependencies
-pip install -e ".[signing]"   # adds Ed25519 signing (cryptography)
-pip install -e ".[sigstore]"  # adds Sigstore keyless signing
-pip install -e ".[oms]"       # adds OpenSSF Model Signing (model-signing)
-pip install -e ".[hf]"        # adds the Hugging Face Hub importer
-pip install -e ".[mlflow]"    # adds full MLflow MLmodel parsing (PyYAML)
+pip install toolkit-ml-provenance                # core, no dependencies
+pip install "toolkit-ml-provenance[signing]"     # adds Ed25519 signing (cryptography)
+pip install "toolkit-ml-provenance[sigstore]"    # adds Sigstore keyless signing
+pip install "toolkit-ml-provenance[oms]"         # adds OpenSSF Model Signing (model-signing)
+pip install "toolkit-ml-provenance[hf]"          # adds the Hugging Face Hub importer
+pip install "toolkit-ml-provenance[mlflow]"      # adds full MLflow MLmodel parsing (PyYAML)
+toolkit-mlsbom --help
 ```
 
-Requires Python 3.10+.
+To work on the code, see [Development](#development).
 
 ## How verification works
 
@@ -322,7 +322,7 @@ toolkit-mlsbom keygen --private-key signing.pem --public-key signing.pub
 toolkit-mlsbom sign-file report.json --key signing.pem           # -> report.json.sig.json
 toolkit-mlsbom verify-file report.json --public-key signing.pub
 
-# Sigstore keyless (pip install -e ".[sigstore]")
+# Sigstore keyless (pip install "toolkit-ml-provenance[sigstore]")
 toolkit-mlsbom sign-file report.json --sigstore                  # -> report.json.sigstore.json
 toolkit-mlsbom verify-file report.json   --identity you@example.com --issuer https://accounts.google.com
 ```
@@ -366,7 +366,7 @@ in the model directory by SHA-256, so it verifies with the `model_signing` CLI
 and other OMS tools, and theirs verify here.
 
 ```bash
-pip install -e ".[oms]"
+pip install "toolkit-ml-provenance[oms]"
 
 # ECDSA key (OMS does not support Ed25519)
 toolkit-mlsbom keygen --algorithm ecdsa-p256 --private-key ec.pem --public-key ec.pub
@@ -452,8 +452,12 @@ command (command, arguments without key paths, outcome, duration).
 
 ## Development
 
+Install from source in editable mode, with the test, lint and type-check tools:
+
 ```bash
-pip install -e ".[dev]"
+git clone https://github.com/AKIVA-AI/toolkit-ml-provenance.git
+cd toolkit-ml-provenance
+pip install -e ".[dev]" black mypy
 pytest
 ruff check src/ tests/
 black --check src/ tests/

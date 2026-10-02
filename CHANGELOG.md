@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.0.0] - 2026-09-26
 
+First release on PyPI (published 2026-10-02): `pip install toolkit-ml-provenance`.
+
 ### Release and project files
 
 - The PyPI distribution name is now `toolkit-ml-provenance`, matching the repository (was `toolkit-ml-provenance-sbom`, never published). Import paths and CLI commands are unchanged.
