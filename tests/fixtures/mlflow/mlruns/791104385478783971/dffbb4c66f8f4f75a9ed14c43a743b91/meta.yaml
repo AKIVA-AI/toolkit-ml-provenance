@@ -1,0 +1,14 @@
+artifact_uri: file:///o/mlruns/791104385478783971/dffbb4c66f8f4f75a9ed14c43a743b91/artifacts
+end_time: 1790444158012
+entry_point_name: ''
+experiment_id: '791104385478783971'
+lifecycle_stage: active
+run_id: dffbb4c66f8f4f75a9ed14c43a743b91
+run_name: tiny-addn
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1790444156487
+status: 3
+tags: []
+user_id: root

@@ -1,0 +1,161 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.10', '3.11', '3.12']
+    steps:
+    - uses: actions/checkout@v7
+    - uses: actions/setup-python@v7
+      with:
+        python-version: ${{ matrix.python-version }}
+        cache: 'pip'
+    - run: pip install -e ".[dev]"
+    - run: pytest --cov=src --cov-report=xml -v
+    - uses: codecov/codecov-action@v7
+      if: matrix.python-version == '3.11'
+
+  extras:
+    # Optional integrations, with network access to their public services.
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v7
+    - uses: actions/setup-python@v7
+      with:
+        python-version: '3.12'
+        cache: 'pip'
+    - run: pip install -e ".[dev,sigstore,oms,hf,mlflow]"
+    - run: pytest -v -rs
+      env:
+        MLSBOM_REQUIRE_NETWORK: "1"
+
+  sigstore-keyless:
+    # Real keyless signing with this workflow's GitHub OIDC identity. Forked PRs
+    # get no id-token, so the job runs only for pushes and same-repo PRs.
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+    - uses: actions/checkout@v7
+    - uses: actions/setup-python@v7
+      with:
+        python-version: '3.12'
+    - run: pip install -e ".[sigstore,oms]"
+    - name: Sign a report keylessly and verify it
+      env:
+        IDENTITY: ${{ github.server_url }}/${{ github.repository }}/.github/workflows/ci.yml@${{ github.ref }}
+      run: |
+        set -eu
+        toolkit-mlsbom generate --root src --include "**/*.py" --out "$RUNNER_TEMP/m.json" --report "$RUNNER_TEMP/report.json"
+        toolkit-mlsbom sign-file "$RUNNER_TEMP/report.json" --sigstore
+        toolkit-mlsbom verify-file "$RUNNER_TEMP/report.json" --identity "$IDENTITY" --issuer https://token.actions.githubusercontent.com --format table
+        # Fail closed: a tampered report and a wrong identity must both be rejected.
+        cp "$RUNNER_TEMP/report.json" "$RUNNER_TEMP/tampered.json"
+        cp "$RUNNER_TEMP/report.json.sigstore.json" "$RUNNER_TEMP/tampered.json.sigstore.json"
+        sed -i 's/"pass"/"fail"/' "$RUNNER_TEMP/tampered.json"
+        if toolkit-mlsbom verify-file "$RUNNER_TEMP/tampered.json" --identity "$IDENTITY" --issuer https://token.actions.githubusercontent.com; then
+          echo "tampered report verified"; exit 1
+        fi
+        if toolkit-mlsbom verify-file "$RUNNER_TEMP/report.json" --identity "https://github.com/someone/else/.github/workflows/x.yml@refs/heads/main" --issuer https://token.actions.githubusercontent.com; then
+          echo "wrong identity verified"; exit 1
+        fi
+    - name: Sign a model directory keylessly in OMS format and verify it
+      env:
+        IDENTITY: ${{ github.server_url }}/${{ github.repository }}/.github/workflows/ci.yml@${{ github.ref }}
+      run: |
+        set -eu
+        mkdir -p "$RUNNER_TEMP/model/weights"
+        head -c 4096 /dev/urandom > "$RUNNER_TEMP/model/weights/model.safetensors"
+        echo '{"model_type": "gpt2"}' > "$RUNNER_TEMP/model/config.json"
+        toolkit-mlsbom sign-model "$RUNNER_TEMP/model" --sigstore
+        toolkit-mlsbom verify-model "$RUNNER_TEMP/model" --identity "$IDENTITY" --issuer https://token.actions.githubusercontent.com --format table
+        echo extra > "$RUNNER_TEMP/model/weights/extra.bin"
+        if toolkit-mlsbom verify-model "$RUNNER_TEMP/model" --identity "$IDENTITY" --issuer https://token.actions.githubusercontent.com; then
+          echo "model with an added file verified"; exit 1
+        fi
+
+  security:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v7
+    - uses: actions/setup-python@v7
+      with:
+        python-version: '3.11'
+    # Upgrade the runner's preinstalled pip/setuptools so pip-audit reports on
+    # this project's dependencies, not on stale tooling in the hosted image.
+    - run: python -m pip install --upgrade pip setuptools
+    - run: pip install bandit pip-audit
+    - run: pip install -e ".[signing,sigstore,oms,hf,mlflow]"
+    - run: bandit -r src/
+    - name: Audit dependencies, every optional extra included
+      run: pip-audit --skip-editable
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v7
+    - uses: actions/setup-python@v7
+      with:
+        python-version: '3.11'
+    - run: pip install black ruff mypy
+    - run: ruff check src/ tests/
+    - run: black --check src/ tests/
+    # The optional sigstore and oms integrations are type-checked too.
+    - run: pip install -e ".[dev,sigstore,oms]"
+    - run: mypy src/ --ignore-missing-imports
+    - run: pyright
+
+  build:
+    name: Build and check package
+    runs-on: ubuntu-latest
+    needs: [test, security, lint]
+    steps:
+    - uses: actions/checkout@v7
+    - uses: actions/setup-python@v7
+      with:
+        python-version: '3.12'
+    - name: Build the sdist and wheel
+      run: |
+        python -m pip install --upgrade pip build "twine>=6.1"
+        python -m build
+    - name: Check the metadata (twine 6.1+ reads Metadata 2.4)
+      run: twine check --strict dist/*
+    - name: Install the wheel in a clean environment
+      run: |
+        python -m venv "$RUNNER_TEMP/venv"
+        "$RUNNER_TEMP/venv/bin/pip" install dist/*.whl
+        "$RUNNER_TEMP/venv/bin/toolkit-mlsbom" --help > /dev/null
+
+  sbom:
+    runs-on: ubuntu-latest
+    needs: [build]
+    steps:
+    - uses: actions/checkout@v7
+    - uses: actions/setup-python@v7
+      with:
+        python-version: '3.11'
+    - run: pip install -e ".[dev]"
+    - name: Install Syft
+      run: curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
+    - name: Generate SBOM (CycloneDX)
+      run: syft dir:. -o cyclonedx-json=sbom.cdx.json
+    - name: Install Grype
+      run: curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b /usr/local/bin
+    - name: Scan SBOM for vulnerabilities
+      run: grype sbom:sbom.cdx.json --fail-on critical
+    - name: Upload SBOM artifact
+      uses: actions/upload-artifact@v7
+      with:
+        name: sbom
+        path: sbom.cdx.json
+        retention-days: 90

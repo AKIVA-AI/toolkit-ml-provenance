@@ -1,0 +1,11 @@
+services:
+  provenance:
+    build: .
+    container_name: toolkit-mlsbom
+    volumes:
+      - ./sboms:/app/sboms
+      - ./reports:/app/reports
+      - ./models:/app/models
+    environment:
+      - MLSBOM_AUDIT_LOG=${MLSBOM_AUDIT_LOG:-}
+    command: tail -f /dev/null
